@@ -44,3 +44,7 @@ function(outcome, categ, report, varequal){
 # , data$condition
 # , report = T
 # , varequal = F)
+
+
+#load as:
+# source('./ds_between_ci.R')

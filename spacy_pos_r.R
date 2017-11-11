@@ -1,10 +1,11 @@
 ###############################################################################
-### Extracts POS via Spacy from text in dataframe
+### Extracts POS via Spacy from text in dataframe #############################
+### allows for counts of total POS and unique occurrences #####################
 ###############################################################################
 
 require(spacyr)
 
-get_pos_count = function(df_identifier, df_textcol, unique_extr = T, pos_type){
+get_pos_count = function(df_identifier, df_textcol, unique_extr = F, pos_type){
 
   sapply(seq(df_identifier), function(i){
     parsedtxt = spacy_parse(as.character(df_textcol[i]), dependency = FALSE, lemma = FALSE, pos = TRUE)
@@ -36,7 +37,8 @@ get_pos_count = function(df_identifier, df_textcol, unique_extr = T, pos_type){
 # spacy_initialize(python_executable = '/Library/Frameworks/Python.framework/Versions/3.5/bin/python3')
 # get_pos_count(test_data$unid, test_data$statement1_content, F, 'ADJ')
 # 'pos_type' argument must be any of the universal pos tags: http://universaldependencies.org/u/pos/all.html
+# for unique occurrence of POS set 'unique_extr = T'
 # spacy_finalize()
 
 #load as:
-# source('')
+# source('./get_pos_count.R')

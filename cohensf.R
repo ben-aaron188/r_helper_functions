@@ -14,3 +14,6 @@ function(F, dfnum, dfden) {
 
 #usage example:
 # cohensf(4.12, 1, 100)
+
+#load as:
+# source('./cohensf.R')

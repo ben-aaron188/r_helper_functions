@@ -1,10 +1,11 @@
 ###############################################################################
-### Extracts Named Entities via Spacy from text in dataframe
+### Extracts Named Entities via Spacy from text in dataframe ##################
+### allows for counts of total named entities and unique occurrences ##########
 ###############################################################################
 
 require(spacyr)
 
-get_entity_count = function(df_identifier, df_textcol, unique_extr = T, entity_type){
+get_entity_count = function(df_identifier, df_textcol, unique_extr = F, entity_type){
 
   sapply(seq(df_identifier), function(i){
     parsedtxt = spacy_parse(as.character(df_textcol[i]), dependency = FALSE, lemma = FALSE, pos = FALSE)
@@ -34,8 +35,9 @@ get_entity_count = function(df_identifier, df_textcol, unique_extr = T, entity_t
 #usage example
 # spacy_initialize(python_executable = '/Library/Frameworks/Python.framework/Versions/3.5/bin/python3')
 # get_entity_count(test_data$unid, test_data$statement1_content, F, 'date')
+# for unique occurrence of NEs set 'unique_extr = T'
 # 'entity_type' argument must be any of the spacy named entity types, to be found here https://spacy.io/usage/linguistic-features#entity-types (lower/upper-case possible)
 # spacy_finalize()
 
 #load as:
-# source('')
+# source('./get_entity_count.R')

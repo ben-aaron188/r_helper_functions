@@ -32,3 +32,6 @@ function(var1, var2, report){
 # dz_within_ci(data$measurement1
 #              , data$measurement2
 #              , report = T)
+
+#load as:
+# source('./dz_within_ci.R')
