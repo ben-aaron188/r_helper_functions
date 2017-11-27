@@ -12,21 +12,38 @@ get_entity_count = function(df_identifier, df_textcol, unique_extr = F, entity_t
     entities = entity_extract(parsedtxt, type = "all")
     entities_unique = entities[!(duplicated((entities$entity))),]
     entity_type_mod = toupper(entity_type)
+    entities_entity = entities[entities$entity_type == entity_type_mod, 'entity']
+    entities_entity_unique = entities_unique[entities_unique$entity_type == entity_type_mod, 'entity']
 
-    print(df_identifier[i])
+
+  #  print(paste(entity_type_mod, 'at', df_identifier[i], sep=" "))
+
     if(unique_extr == T){
       if(entity_type_mod == 'ALL'){
         extracted_count = length(unique(entities$entity))
       } else {
         extracted_count = sum(entities_unique$entity_type == entity_type_mod)
+        if(extracted_count > 0){
+          print(paste("found:", entity_type_mod, "-->", entities_entity_unique, "<---", 'in', df_identifier[i], sep=" "))
+        } else {
+          print(paste("no:", entity_type_mod, 'in', df_identifier[i], sep=" "))
+        }
+
       }
     } else if(unique_extr == F){
       if(entity_type_mod == 'ALL'){
         extracted_count = length(entities$entity)
       } else {
         extracted_count = sum(entities$entity_type == entity_type_mod)
+        if(extracted_count > 0){
+          print(paste("found:", entity_type_mod, "-->", entities_entity, "<---", 'in', df_identifier[i], sep=" "))
+        } else {
+          print(paste("no:", entity_type_mod, 'in', df_identifier[i], sep=" "))
+        }
+
       }
     }
+    print("============================")
     return(extracted_count)
   })
 
