@@ -3,10 +3,12 @@
 ### Usable in spacy_ner_r pipeline
 ###############################################################################
 require(stringr)
-txt_df_from_dir = function(dirpath){
+require(tm)
+
+txt_df_from_dir = function(dirpath, include_processed = FALSE){
   currentwd = getwd()
   setwd(dirpath)
-  file_list = list.files()
+  file_list = list.files(pattern = '*.txt')
   data = do.call("rbind"
                  , lapply(file_list
                           , FUN=function(files) {
@@ -32,16 +34,36 @@ txt_df_from_dir = function(dirpath){
 
   data = data[,-2]
 
+  if(include_processed == T){
+    data$text_proc = sapply(data$text, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+      tm_vec_col = tm_map(tm_vec_col, removePunctuation)
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+      tm_vec_col = tm_map(tm_vec_col, stripWhitespace)
+      tm_vec_col = tm_map(tm_vec_col, removeWords, stopwords("en"))
+      tm_vec_col = tm_map(tm_vec_col, stripWhitespace)
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+      tm_vec_col = tm_map(tm_vec_col, stemDocument, language = 'en')
+      as.character(as.matrix(tm_vec_col$content))
+    })
+  }
+
   setwd(currentwd)
 
   return(data)
 }
 
-#usage example:
+#CHANGELOG:
+#6 DEC 2017: ADDED processing pipeline for additional text column
+#END CHANGELOG
 
-#new_data = txt_df_from_dir(dirpath = './my_text_folder')
+#usage example:
+#new_data = txt_df_from_dir(dirpath = './my_text_folder', include_processed = T)
 
 #View(new_data)
 
 #load as:
-# source('')
+# source('./txt_df_from_dir.R')
