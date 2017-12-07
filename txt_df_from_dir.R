@@ -51,6 +51,7 @@ txt_df_from_dir = function(dirpath, include_processed = FALSE){
     })
   }
 
+  data$id = 1:nrow(data)
   setwd(currentwd)
 
   return(data)
