@@ -123,6 +123,44 @@ get_term_doc_matrix_plus = function(input_txt_col, stemming_global, tdm_type, sp
   return(tdm_new_trans)
 }
 
+get_concreteness = function(input_txt_col, stemming_global, type){
+
+  t1 = Sys.time()
+  print(paste('--- STARTING CONCRETENESS CALC. at: ', t1))
+  print("-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-.-")
+
+  f1 = sapply(input_txt_col, function(x){
+
+    word_vec_for_df = unlist(tokenize_words(x))
+    word_vec_for_df_length = length(word_vec_for_df)
+    df = data.frame('id' = 1:word_vec_for_df_length
+                    , 'word' = word_vec_for_df)
+    if(stemming_global == T){
+      concr_df = merge(df, concr
+                       , by='word')
+    } else if(stemming_global == F){
+      concr_df = merge(df, concr
+                       , by.x='word'
+                       , by.y='word_stemmed')
+    }
+    concr_sum = sum(concr_df$conc.m)
+    concr_avg = mean(concr_df$conc.m)
+    if(type == 'sum'){
+      return(concr_sum)
+    } else if(type == 'mean'){
+      return(concr_avg)
+    }
+  })
+
+
+  t2 = Sys.time()
+  elapsed = t2-t1
+  print(paste('--- FINISHED ---'))
+  print(t2-t1)
+
+  return(f1)
+}
+
 #usage example:
 # ngram_plus_1 = get_term_doc_matrix_plus(input_txt_col = data$text
 #                                         , tdm_type = 'tfidf'
@@ -131,4 +169,5 @@ get_term_doc_matrix_plus = function(input_txt_col, stemming_global, tdm_type, sp
 #                                         , add_weights = T)
 #
 # data_merged = merge(data, ngram_plus_1, by='id')
+# data$conc = get_concreteness(data$text[1:20], F, 'mean')
 

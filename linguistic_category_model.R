@@ -47,7 +47,7 @@ load('./lcm/hgi.RData')
 #      , file = 'hgi.RData')
 ###
 
-tokenize_words_vec = function(input_txt_col){
+tokenize_words_vec_length = function(input_txt_col){
   length_vec = sapply(input_txt_col, function(x){
     length(as.vector(unlist(tokenize_words(x) )))
   })
@@ -77,8 +77,8 @@ calculate_lcm = function(df_name, verbose = F){
 
   data_for_lcm = df_name
 
-  data_for_lcm$nwords = tokenize_words_vec(data_for_lcm$text)
-  data_for_lcm$nwords_proc = tokenize_words_vec(data_for_lcm$text_proc)
+  data_for_lcm$nwords = tokenize_words_vec_length(data_for_lcm$text)
+  data_for_lcm$nwords_proc = tokenize_words_vec_length(data_for_lcm$text_proc)
 
   #POS tagging
   data_for_lcm$adj = get_pos_count(df_identifier = data_for_lcm$Filename
