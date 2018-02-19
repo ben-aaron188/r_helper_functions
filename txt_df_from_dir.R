@@ -5,6 +5,14 @@
 require(stringr)
 require(tm)
 
+### these might be required ###
+# library(data.table)
+# dyn.load('/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/jre/lib/server/libjvm.dylib')
+# require(rJava)
+# library(qdap)
+# library(openNLP)
+
+
 txt_df_from_dir = function(dirpath, include_processed = FALSE){
   currentwd = getwd()
   setwd(dirpath)
@@ -18,7 +26,7 @@ txt_df_from_dir = function(dirpath, include_processed = FALSE){
                             paste(files
                                   , readChar(files
                                             , file.info(files)$size)
-                                  , sep="!!!!!!!!!")
+                                  , sep="@@@")
                           }
                  )
   )
@@ -29,8 +37,8 @@ txt_df_from_dir = function(dirpath, include_processed = FALSE){
   data = as.data.frame(data)
   names(data) = c('text', 'id')
 
-  data$Filename = as.factor(str_extract(data$text, '^[^!!!!!!!!!]*'))
-  data$text = sub('.*\\!!!!!!!!!(.*)','\\1', data$text)
+  data$Filename = as.factor(str_extract(data$text, '^[^@@@]*'))
+  data$text = sub('.*\\@@@(.*)','\\1', data$text)
 
   data = data[,-2]
 
@@ -43,7 +51,7 @@ txt_df_from_dir = function(dirpath, include_processed = FALSE){
       tm_vec_col = tm_map(tm_vec_col, removePunctuation)
       tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
       tm_vec_col = tm_map(tm_vec_col, stripWhitespace)
-      tm_vec_col = tm_map(tm_vec_col, removeWords, stopwords("en"))
+      tm_vec_col = tm_map(tm_vec_col, removeWords, tm::stopwords("en"))
       tm_vec_col = tm_map(tm_vec_col, stripWhitespace)
       tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
       tm_vec_col = tm_map(tm_vec_col, stemDocument, language = 'en')

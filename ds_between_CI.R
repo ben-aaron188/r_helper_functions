@@ -6,6 +6,7 @@ require(MBESS)
 
 ds_between_ci <-
 function(outcome, categ, report, varequal){
+
     a = tapply(outcome, categ, mean)
     a = a[!is.na(a)]
     b = tapply(outcome, categ, sd)
@@ -16,7 +17,7 @@ function(outcome, categ, report, varequal){
     df = round(as.vector(e$parameter), 2)
     pvalue = round(e$p.value, 4)
     table_categ = as.data.frame(table(categ))
-    table_categ[table_categ == 0] = NA
+    table_categ$Freq[table_categ$Freq == 0] = NA
     table_categ = na.omit(table_categ)
     n1 = table_categ[1,2]
     n2 = table_categ[2,2]
@@ -38,6 +39,9 @@ function(outcome, categ, report, varequal){
   }
     print(out)
 }
+
+#CHANGE LOG:
+#30 DEC 2017: fixed bug in line 20 which transformed 0 class labels to NAs.
 
 #usage example:
 # ds_between_ci(data$outcome
