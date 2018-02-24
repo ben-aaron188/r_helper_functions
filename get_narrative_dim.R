@@ -12,6 +12,8 @@ require(syuzhet)
 require(tm)
 #require(qdap)
 
+# NOTE on dependencies: this code requires local dependencies from the repo mentioned below. Set the wd to the repo to avoid problems.
+
 #needs wd with helper functions
 #easiest is to use the repo on: https://github.com/ben-aaron188/r_helper_functions
 
@@ -132,8 +134,8 @@ get_narrative_dim = function(txt_input_col
 #usage example:
 # data = data.frame('text' = character(2)
 #                   , 'text_id' = character(2))
-# data$text = c('this is a super, great positive sentence and I just love doing this'
-#                  , 'and now a bad, bad, and ugly example which I really hate')
+# data$text = c('this is a super, great positive sentence and I just love doing this. Now this will be very negative and with disgusting words and ugly phrases'
+#                  , 'here we begin in a bad, bad, and ugly way but quickly become overly positive for all the great things this exciting code can do')
 # data$text_id = c('text1', 'text2')
 #
 # my_sentiment_analysis = get_narrative_dim(txt_input_col = data$text
@@ -143,7 +145,7 @@ get_narrative_dim = function(txt_input_col
 #                         , transposing = F)
 #
 # plot(1:100
-#      , my_sentiment_analysis$text1
+#      , my_sentiment_analysis$text2
 #      , type ="h"
 #      , col = "red")
 #
