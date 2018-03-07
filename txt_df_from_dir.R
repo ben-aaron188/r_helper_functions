@@ -13,10 +13,16 @@ require(tm)
 # library(openNLP)
 
 
-txt_df_from_dir = function(dirpath, include_processed = FALSE){
+txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
   currentwd = getwd()
   setwd(dirpath)
-  file_list = list.files(pattern = '*.txt')
+  if(recursive == T){
+    print('*** recursive iteration currently only supports one level of depth.')
+    print('*** having more depth is possible but needs manual regex setting for file id.')
+    file_list = list.files(pattern = '*.txt', recursive = T)
+  } else if (recursive == F){
+    file_list = list.files(pattern = '*.txt', recursive = F)
+  }
   data = do.call("rbind"
                  , lapply(file_list
                           , FUN=function(files) {
@@ -38,6 +44,12 @@ txt_df_from_dir = function(dirpath, include_processed = FALSE){
   names(data) = c('text', 'id')
 
   data$Filename = as.factor(str_extract(data$text, '^[^@@@]*'))
+
+  if(recursive == T){
+    data$file_id = sub('.*\\/(.*)','\\1', data$Filename)
+    data$file_parent = sub('(.*)\\/.*','\\1', data$Filename)
+  }
+
   data$text = sub('.*\\@@@(.*)','\\1', data$text)
 
   data = data[,-2]
@@ -67,10 +79,15 @@ txt_df_from_dir = function(dirpath, include_processed = FALSE){
 
 #CHANGELOG:
 #6 DEC 2017: ADDED processing pipeline for additional text column
+#3 MAR 2018: ADDED  recursiveness
 #END CHANGELOG
 
+#TODO:
+# - col with dir - 1, etc. (param: depth = int)
+
+
 #usage example:
-#new_data = txt_df_from_dir(dirpath = './my_text_folder', include_processed = T)
+#new_data = txt_df_from_dir(dirpath = './my_text_folder', recursive = T, include_processed = T)
 
 #View(new_data)
 

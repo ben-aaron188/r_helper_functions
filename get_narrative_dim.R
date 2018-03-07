@@ -7,11 +7,6 @@
 ### - ACCEPTS DATAFRAME COLUMNS WITH TEXT
 ####################################################################
 
-
-require(syuzhet)
-require(tm)
-#require(qdap)
-
 # NOTE on dependencies: this code requires local dependencies from the repo mentioned below. Set the wd to the repo to avoid problems.
 
 #needs wd with helper functions
@@ -63,9 +58,14 @@ require(tm)
 get_narrative_dim = function(txt_input_col
                      , txt_id_col
                      , dimension
+                     , transform_values
                      , stemming = T
                      , bins = 100
                      , transposing = F){
+  require(syuzhet)
+  require(tm)
+  require(qdap)
+
   currentwd = getwd()
   t1 = Sys.time()
   if(dimension == 'concreteness'){
@@ -96,7 +96,17 @@ get_narrative_dim = function(txt_input_col
       as.character(as.matrix(tm_vec_col$content))
     })
   } else if(stemming == F){
-    txt_col = txt_input_col
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+      #tm_vec_col = tm_map(tm_vec_col, removeWords, tm::stopwords("en"))
+      #tm_vec_col = tm_map(tm_vec_col, stemDocument, language = 'en')
+      as.character(as.matrix(tm_vec_col$content))
+    })
+    #txt_col = txt_input_col
   }
 
   empty_matrix = matrix(data = 0
@@ -130,6 +140,66 @@ get_narrative_dim = function(txt_input_col
   return(final_df)
 }
 
+#minified example: this is faster than the above and skips tm-based preprocessing
+get_narrative_dim_min = function(txt_input_col
+                             , txt_id_col
+                             , method
+                             , transform_values = F
+                             ){
+
+  require(syuzhet)
+  if(method == 'meanr'){
+    require(meanr)
+  }
+  if(method == 'sentimentr'){
+    require(sentimentr)
+  }
+
+
+  currentwd = getwd()
+  t1 = Sys.time()
+  if((!(method %in% c('syuzhet', 'meanr', 'sentimentr')))){
+    print('!!! Choose a valid method!!!')
+    t2 = Sys.time()
+    print(t2-t1)
+  } else {
+    print(paste('TOKEN-BASED SENTIMENT EXTRACTION USING: ', method))
+    txt_col = txt_input_col
+    empty_matrix = matrix(data = 0
+                          , nrow = 100
+                          , ncol = length(txt_col)
+    )
+    sent_lexicon = get_sentiment_dictionary()
+    for(i in 1:length(txt_col)){
+      print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
+      text.tokens = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
+      if(method == 'syuzhet'){
+        text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
+      } else if (method == 'meanr'){
+        text.scored = score(text.tokens)$score
+      } else if (method == 'sentimentr'){
+        text.sentences = sentimentr::get_sentences(text.tokens)
+        text.scored = sentiment(text.sentences)$sentiment
+      }
+      text.scored_binned = get_dct_transform(text.scored
+                                             , x_reverse_len=100
+                                             , scale_range = transform_values
+                                             , scale_vals = F)
+      empty_matrix[, i] = text.scored_binned
+
+    }
+    final_df = as.data.frame(empty_matrix)
+    colnames(final_df) = txt_id_col
+    t2 = Sys.time()
+    print(t2-t1)
+    setwd(currentwd)
+    return(final_df)
+  }
+}
+
+
+#CHANGELOG:
+#- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
 
 #usage example:
 # data = data.frame('text' = character(2)
@@ -143,6 +213,13 @@ get_narrative_dim = function(txt_input_col
 #                         , dimension = 'sentiment'
 #                         , stemming = F
 #                         , transposing = F)
+#
+#
+# my_fast_sentiment_analysis = get_narrative_dim_min(txt_input_col = txt_input_col = data$text
+#                       , txt_id_col = data$text_id
+#                       , method = 'sentimentr'
+#                       , transform_values = T
+#                       )
 #
 # plot(1:100
 #      , my_sentiment_analysis$text2
