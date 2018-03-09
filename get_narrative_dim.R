@@ -145,6 +145,7 @@ get_narrative_dim_min = function(txt_input_col
                              , txt_id_col
                              , method
                              , transform_values = F
+                             , min_tokens = 10
                              ){
 
   require(syuzhet)
@@ -173,20 +174,23 @@ get_narrative_dim_min = function(txt_input_col
     for(i in 1:length(txt_col)){
       print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
       text.tokens = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
-      if(method == 'syuzhet'){
-        text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
-      } else if (method == 'meanr'){
-        text.scored = score(text.tokens)$score
-      } else if (method == 'sentimentr'){
-        text.sentences = sentimentr::get_sentences(text.tokens)
-        text.scored = sentiment(text.sentences)$sentiment
+      if(length(text.tokens) >= min_tokens){
+        if(method == 'syuzhet'){
+          text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
+        } else if (method == 'meanr'){
+          text.scored = score(text.tokens)$score
+        } else if (method == 'sentimentr'){
+          text.sentences = sentimentr::get_sentences(text.tokens)
+          text.scored = sentiment(text.sentences)$sentiment
+        }
+        text.scored_binned = get_dct_transform(text.scored
+                                               , x_reverse_len=100
+                                               , scale_range = transform_values
+                                               , scale_vals = F)
+        empty_matrix[, i] = text.scored_binned
+      } else {
+        empty_matrix[, i] = rep(NA, 100)
       }
-      text.scored_binned = get_dct_transform(text.scored
-                                             , x_reverse_len=100
-                                             , scale_range = transform_values
-                                             , scale_vals = F)
-      empty_matrix[, i] = text.scored_binned
-
     }
     final_df = as.data.frame(empty_matrix)
     colnames(final_df) = txt_id_col
@@ -200,6 +204,7 @@ get_narrative_dim_min = function(txt_input_col
 
 #CHANGELOG:
 #- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
+#- 8 MAR 2018: added error catch with NAs for too short input data
 
 #usage example:
 # data = data.frame('text' = character(2)
