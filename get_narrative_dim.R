@@ -59,6 +59,7 @@ get_narrative_dim = function(txt_input_col
                      , txt_id_col
                      , dimension
                      , transform_values
+                     , low_pass_filter_size
                      , stemming = T
                      , bins = 100
                      , transposing = F){
@@ -123,9 +124,12 @@ get_narrative_dim = function(txt_input_col
     }
     text.scored_binned = get_dct_transform(text.scored
                                          , x_reverse_len=bins
-                                         , scale_range=T)
+                                         , low_pass_size = low_pass_filter_size
+                                         , scale_range = transform_values
+                                         )
     sentiment_rolled_rescaled = rescale_x_2(text.scored_binned)
     empty_matrix[, i] = sentiment_rolled_rescaled$z
+    empty_matrix[, i] = text.scored_binned
   }
   if(transposing == T){
     final_df = as.data.frame(t(empty_matrix))
@@ -144,6 +148,7 @@ get_narrative_dim = function(txt_input_col
 get_narrative_dim_min = function(txt_input_col
                              , txt_id_col
                              , method
+                             , low_pass_filter_size
                              , transform_values = F
                              , min_tokens = 10
                              ){
@@ -180,11 +185,12 @@ get_narrative_dim_min = function(txt_input_col
         } else if (method == 'meanr'){
           text.scored = score(text.tokens)$score
         } else if (method == 'sentimentr'){
-          text.sentences = sentimentr::get_sentences(text.tokens)
+          text.sentences = sentimentr::get_sentences(text.tokens) #HERE!
           text.scored = sentiment(text.sentences)$sentiment
         }
         text.scored_binned = get_dct_transform(text.scored
                                                , x_reverse_len=100
+                                               , low_pass_size = low_pass_filter_size
                                                , scale_range = transform_values
                                                , scale_vals = F)
         empty_matrix[, i] = text.scored_binned
@@ -202,9 +208,13 @@ get_narrative_dim_min = function(txt_input_col
 }
 
 
+#TODO:
+# - implement sentence based annotation as in sentimentr (line 188)
+
 #CHANGELOG:
 #- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
 #- 8 MAR 2018: added error catch with NAs for too short input data
+#- 24 MAR 2018: added arg for low pass filter size
 
 #usage example:
 # data = data.frame('text' = character(2)
@@ -223,6 +233,7 @@ get_narrative_dim_min = function(txt_input_col
 # my_fast_sentiment_analysis = get_narrative_dim_min(txt_input_col = txt_input_col = data$text
 #                       , txt_id_col = data$text_id
 #                       , method = 'sentimentr'
+#                       , low_pass_filter_size = 5
 #                       , transform_values = T
 #                       )
 #

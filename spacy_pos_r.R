@@ -92,4 +92,4 @@ get_pos_count = function(df_identifier, df_textcol, unique_extr = F, pos_type, v
 # spacy_finalize()
 
 #load as:
-# source('./get_pos_count.R')
+# source('./spacy_pos_r.R')
