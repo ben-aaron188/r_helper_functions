@@ -55,94 +55,95 @@
 #END DO NOT RUN
 
 
-get_narrative_dim = function(txt_input_col
-                     , txt_id_col
-                     , dimension
-                     , transform_values
-                     , low_pass_filter_size
-                     , stemming = T
-                     , bins = 100
-                     , transposing = F){
-  require(syuzhet)
-  require(tm)
-  require(qdap)
-
-  currentwd = getwd()
-  t1 = Sys.time()
-  if(dimension == 'concreteness'){
-    load('./syuzhet_dep/brysbaert_dict_two_versions.RData')
-    if(stemming == T){
-      concr_lexicon = concr.dict_stemmed
-    } else if(stemming == F){
-      concr_lexicon = concr.dict_nonstemmed
-    }
-  } else if(dimension == 'sentiment'){
-    load('./syuzhet_dep/syuzhet_dict_stemmed.RData')
-    if(stemming == T){
-      sent_lexicon = syuzhet.dict
-    } else if(stemming == F){
-      sent_lexicon = get_sentiment_dictionary()
-    }
-  }
-
-  if(stemming == T){
-    txt_col = sapply(txt_input_col, function(x){
-      tm_vec_col = Corpus(VectorSource(x))
-      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
-      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
-      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
-      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
-      tm_vec_col = tm_map(tm_vec_col, removeWords, tm::stopwords("en"))
-      tm_vec_col = tm_map(tm_vec_col, stemDocument, language = 'en')
-      as.character(as.matrix(tm_vec_col$content))
-    })
-  } else if(stemming == F){
-    txt_col = sapply(txt_input_col, function(x){
-      tm_vec_col = Corpus(VectorSource(x))
-      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
-      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
-      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
-      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
-      #tm_vec_col = tm_map(tm_vec_col, removeWords, tm::stopwords("en"))
-      #tm_vec_col = tm_map(tm_vec_col, stemDocument, language = 'en')
-      as.character(as.matrix(tm_vec_col$content))
-    })
-    #txt_col = txt_input_col
-  }
-
-  empty_matrix = matrix(data = 0
-                        , nrow = bins
-                        , ncol = length(txt_col)
-                        )
-  for(i in 1:length(txt_col)){
-    print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
-    text.tokens = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
-    if(dimension == 'sentiment'){
-      text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
-    } else if(dimension == 'concreteness'){
-      text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = concr_lexicon)
-    }
-    text.scored_binned = get_dct_transform(text.scored
-                                         , x_reverse_len=bins
-                                         , low_pass_size = low_pass_filter_size
-                                         , scale_range = transform_values
-                                         )
-    sentiment_rolled_rescaled = rescale_x_2(text.scored_binned)
-    empty_matrix[, i] = sentiment_rolled_rescaled$z
-    empty_matrix[, i] = text.scored_binned
-  }
-  if(transposing == T){
-    final_df = as.data.frame(t(empty_matrix))
-    row.names(final_df) = txt_id_col
-  } else if(transposing == F){
-    final_df = as.data.frame(empty_matrix)
-    colnames(final_df) = txt_id_col
-  }
-  t2 = Sys.time()
-  print(t2-t1)
-  setwd(currentwd)
-  return(final_df)
-}
+#SUPERSEDED: USE THE ...min FUNCTION BELOW
+# get_narrative_dim = function(txt_input_col
+#                      , txt_id_col
+#                      , dimension
+#                      , transform_values
+#                      , low_pass_filter_size
+#                      , stemming = T
+#                      , bins = 100
+#                      , transposing = F){
+#   require(syuzhet)
+#   require(tm)
+#   require(qdap)
+#
+#   currentwd = getwd()
+#   t1 = Sys.time()
+#   if(dimension == 'concreteness'){
+#     load('./syuzhet_dep/brysbaert_dict_two_versions.RData')
+#     if(stemming == T){
+#       concr_lexicon = concr.dict_stemmed
+#     } else if(stemming == F){
+#       concr_lexicon = concr.dict_nonstemmed
+#     }
+#   } else if(dimension == 'sentiment'){
+#     load('./syuzhet_dep/syuzhet_dict_stemmed.RData')
+#     if(stemming == T){
+#       sent_lexicon = syuzhet.dict
+#     } else if(stemming == F){
+#       sent_lexicon = get_sentiment_dictionary()
+#     }
+#   }
+#
+#   if(stemming == T){
+#     txt_col = sapply(txt_input_col, function(x){
+#       tm_vec_col = Corpus(VectorSource(x))
+#       tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+#       tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+#       tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+#       tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+#       tm_vec_col = tm_map(tm_vec_col, removeWords, tm::stopwords("en"))
+#       tm_vec_col = tm_map(tm_vec_col, stemDocument, language = 'en')
+#       as.character(as.matrix(tm_vec_col$content))
+#     })
+#   } else if(stemming == F){
+#     txt_col = sapply(txt_input_col, function(x){
+#       tm_vec_col = Corpus(VectorSource(x))
+#       tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+#       tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+#       tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+#       tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+#       #tm_vec_col = tm_map(tm_vec_col, removeWords, tm::stopwords("en"))
+#       #tm_vec_col = tm_map(tm_vec_col, stemDocument, language = 'en')
+#       as.character(as.matrix(tm_vec_col$content))
+#     })
+#     #txt_col = txt_input_col
+#   }
+#
+#   empty_matrix = matrix(data = 0
+#                         , nrow = bins
+#                         , ncol = length(txt_col)
+#                         )
+#   for(i in 1:length(txt_col)){
+#     print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
+#     text.tokens = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
+#     if(dimension == 'sentiment'){
+#       text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
+#     } else if(dimension == 'concreteness'){
+#       text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = concr_lexicon)
+#     }
+#     text.scored_binned = get_dct_transform(text.scored
+#                                          , x_reverse_len=bins
+#                                          , low_pass_size = low_pass_filter_size
+#                                          , scale_range = transform_values
+#                                          )
+#     sentiment_rolled_rescaled = rescale_x_2(text.scored_binned)
+#     empty_matrix[, i] = sentiment_rolled_rescaled$z
+#     empty_matrix[, i] = text.scored_binned
+#   }
+#   if(transposing == T){
+#     final_df = as.data.frame(t(empty_matrix))
+#     row.names(final_df) = txt_id_col
+#   } else if(transposing == F){
+#     final_df = as.data.frame(empty_matrix)
+#     colnames(final_df) = txt_id_col
+#   }
+#   t2 = Sys.time()
+#   print(t2-t1)
+#   setwd(currentwd)
+#   return(final_df)
+# }
 
 #minified example: this is faster than the above and skips tm-based preprocessing
 get_narrative_dim_min = function(txt_input_col
