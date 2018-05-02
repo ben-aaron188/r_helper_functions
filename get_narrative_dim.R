@@ -208,35 +208,33 @@ get_narrative_dim_min = function(txt_input_col
   }
 
 #CHANGELOG:
+#- 2 MAY 2018: made sentiment extr. sentence-based,
+#              adjusted scaling terminology,
+#              added text cleaning (some optional)
 #- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
 #- 8 MAR 2018: added error catch with NAs for too short input data
 #- 24 MAR 2018: added arg for low pass filter size
 
-#usage example:
 # data = data.frame('text' = character(2)
 #                   , 'text_id' = character(2))
-# data$text = c('this is a super, great positive sentence and I just love doing this. Now this will be very negative and with disgusting words and ugly phrases'
-#                  , 'here we begin in a bad, bad, and ugly way but quickly become overly positive for all the great things this exciting code can do')
-# data$text_id = c('text1', 'text2')
+# data$text = 'This is a super, great positive sentence. I just love doing this. Now this will be very negative sentence. With disgusting words and ugly phrases. 
+#                We stay negative for a while. We go even more terrible and awful. Things are getting better now.
+#                It's starting to feel really good. I'm ecstatic at this point. This is amazing. I am incredibly positive now.' 
+# data$text_id = 'text1'
 #
-# my_sentiment_analysis = get_narrative_dim(txt_input_col = data$text
-#                         , txt_id_col = data$text_id
-#                         , dimension = 'sentiment'
-#                         , stemming = F
-#                         , transposing = F)
-#
-#
-# my_fast_sentiment_analysis = get_narrative_dim_min(txt_input_col = txt_input_col = data$text
+# my_sentiment_analysis = get_narrative_dim_min_snt(txt_input_col = txt_input_col = data$text
 #                       , txt_id_col = data$text_id
-#                       , method = 'sentimentr'
 #                       , low_pass_filter_size = 5
+#                       , clean = F
 #                       , transform_values = T
+#                       , normalize_values = F
 #                       )
 #
 # plot(1:100
-#      , my_sentiment_analysis$text2
+#      , my_sentiment_analysis$text1
 #      , type ="h"
 #      , col = "red")
+#
 #
 # my_concreteness_analysis = get_narrative_dim(txt_input_col = data$text
 #                                   , txt_id_col = data$text_id
