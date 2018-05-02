@@ -145,7 +145,7 @@
 #   return(final_df)
 # }
 
-#minified example: this is faster than the above and skips tm-based preprocessing
+#minified example: sentence based, takes into account amplifiers and negators
 get_narrative_dim_min = function(txt_input_col
                              , txt_id_col
                              , low_pass_filter_size
