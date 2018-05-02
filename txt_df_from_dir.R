@@ -18,7 +18,7 @@ txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
   setwd(dirpath)
   if(recursive == T){
     print('*** recursive iteration currently only supports one level of depth.')
-    print('*** having more depth is possible but needs manual regex setting for file id.')
+    print('--- having more depth is possible but needs manual regex setting for file id.')
     file_list = list.files(pattern = '*.txt', recursive = T)
   } else if (recursive == F){
     file_list = list.files(pattern = '*.txt', recursive = F)
@@ -51,6 +51,8 @@ txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
   }
 
   data$text = sub('.*\\@@@(.*)','\\1', data$text)
+  data$text = str_replace_all(data$text, "[\n]", " ")
+  data$nwords = unlist(lapply(str_split(data$text, ' '), length))
 
   data = data[,-2]
 
@@ -80,6 +82,7 @@ txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
 #CHANGELOG:
 #6 DEC 2017: ADDED processing pipeline for additional text column
 #3 MAR 2018: ADDED  recursiveness
+#27 APR 2018: ADDED WORD (TOKEN) COUNT + ADDED LINE BREAK FIX
 #END CHANGELOG
 
 #TODO:
