@@ -148,52 +148,30 @@
 #minified example: this is faster than the above and skips tm-based preprocessing
 get_narrative_dim_min = function(txt_input_col
                              , txt_id_col
-                             , method
                              , low_pass_filter_size
                              , transform_values = F
-                             , min_tokens = 10
+                             , min_sentences = 10
                              ){
-
-  require(syuzhet)
-  if(method == 'meanr'){
-    require(meanr)
-  }
-  if(method == 'sentimentr'){
-    require(sentimentr)
-  }
-
-
   currentwd = getwd()
   t1 = Sys.time()
-  if((!(method %in% c('syuzhet', 'meanr', 'sentimentr')))){
-    print('!!! Choose a valid method!!!')
-    t2 = Sys.time()
-    print(t2-t1)
-  } else {
-    print(paste('TOKEN-BASED SENTIMENT EXTRACTION USING: ', method))
+  
+  # Sentence-based sentiment extraction 
+    print(paste('SENTENCE-BASED SENTIMENT EXTRACTION USING: ', method))
     txt_col = txt_input_col
     empty_matrix = matrix(data = 0
                           , nrow = 100
                           , ncol = length(txt_col)
     )
-    sent_lexicon = get_sentiment_dictionary()
     for(i in 1:length(txt_col)){
       print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
-      text.tokens = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
-      if(length(text.tokens) >= min_tokens){
-        if(method == 'syuzhet'){
-          text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
-        } else if (method == 'meanr'){
-          text.scored = score(text.tokens)$score
-        } else if (method == 'sentimentr'){
-          text.sentences = sentimentr::get_sentences(text.tokens) #HERE!
+      text.sentences = sentimentr::get_sentences(txt_col[i])
+      if(length(text.sentences) >= min_sentences){
           text.scored = sentiment(text.sentences)$sentiment
-        }
-        text.scored_binned = get_dct_transform(text.scored
+          text.scored_binned = get_dct_transform(text.scored
                                                , x_reverse_len=100
                                                , low_pass_size = low_pass_filter_size
                                                , scale_range = transform_values
-                                               , scale_vals = F)
+                                               , scale_vals = normalize_values)
         empty_matrix[, i] = text.scored_binned
       } else {
         empty_matrix[, i] = rep(NA, 100)
@@ -206,11 +184,6 @@ get_narrative_dim_min = function(txt_input_col
     setwd(currentwd)
     return(final_df)
   }
-}
-
-
-#TODO:
-# - implement sentence based annotation as in sentimentr (line 188)
 
 #CHANGELOG:
 #- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
