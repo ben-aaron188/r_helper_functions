@@ -149,11 +149,33 @@
 get_narrative_dim_min = function(txt_input_col
                              , txt_id_col
                              , low_pass_filter_size
+                             , clean = F
                              , transform_values = F
                              , min_sentences = 10
                              ){
   currentwd = getwd()
   t1 = Sys.time()
+  require(tm)
+  require(qdap)
+  require(sentimentr)
+  
+  # Necessary replacing of abbreviations because they interfere with sentence splitting
+  for(i in 1:length(txt_input_col)){
+    print(paste('---> replacing abbreviations on text: ', txt_id_col[i], sep=""))
+    txt_input_col[i] = replace_abbreviation(txt_input_col[i])
+  }
+  
+  # Cleaning: replace contractions & numbers and make lower case
+  if (clean == T) {
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+      as.character(as.matrix(tm_vec_col$content))
+    })
+    txt_col = txt_input_col
+  }
   
   # Sentence-based sentiment extraction 
     print(paste('SENTENCE-BASED SENTIMENT EXTRACTION USING: ', method))
