@@ -149,20 +149,24 @@
 get_narrative_dim_min = function(txt_input_col
                              , txt_id_col
                              , low_pass_filter_size
+                             , replace_abbr = T
                              , clean = F
-                             , transform_values = F
-                             , min_sentences = 10
+                             , transform_values = T
+                             , normalize_values = F
                              ){
   currentwd = getwd()
   t1 = Sys.time()
   require(tm)
   require(qdap)
   require(sentimentr)
-  
-  # Necessary replacing of abbreviations because they interfere with sentence splitting
-  for(i in 1:length(txt_input_col)){
-    print(paste('---> replacing abbreviations on text: ', txt_id_col[i], sep=""))
-    txt_input_col[i] = replace_abbreviation(txt_input_col[i])
+  require(syuzhet)
+ 
+   # Replacing of abbreviations because they interfere with sentence splitting (recommended)
+  if(replace_abbr == T) {
+    for(i in 1:length(txt_input_col)) {
+      print(paste('---> replacing abbreviations on text: ', txt_id_col[i], sep=""))
+      txt_input_col[i] = replace_abbreviation(txt_input_col[i])
+    }
   }
   
   # Cleaning: replace contractions & numbers and make lower case
@@ -178,16 +182,15 @@ get_narrative_dim_min = function(txt_input_col
   }
   
   # Sentence-based sentiment extraction 
-    print(paste('SENTENCE-BASED SENTIMENT EXTRACTION USING: ', method))
+    print('SENTENCE-BASED SENTIMENT EXTRACTION USING SENTIMENTR ')
     txt_col = txt_input_col
     empty_matrix = matrix(data = 0
                           , nrow = 100
                           , ncol = length(txt_col)
     )
-    for(i in 1:length(txt_col)){
+    for(i in 1:length(txt_col)) {
       print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
       text.sentences = sentimentr::get_sentences(txt_col[i])
-      if(length(text.sentences) >= min_sentences){
           text.scored = sentiment(text.sentences)$sentiment
           text.scored_binned = get_dct_transform(text.scored
                                                , x_reverse_len=100
@@ -195,10 +198,7 @@ get_narrative_dim_min = function(txt_input_col
                                                , scale_range = transform_values
                                                , scale_vals = normalize_values)
         empty_matrix[, i] = text.scored_binned
-      } else {
-        empty_matrix[, i] = rep(NA, 100)
       }
-    }
     final_df = as.data.frame(empty_matrix)
     colnames(final_df) = txt_id_col
     t2 = Sys.time()
