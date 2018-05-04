@@ -152,6 +152,8 @@ get_narrative_dim_min = function(txt_input_col
                              , low_pass_filter_size
                              , transform_values = F
                              , min_tokens = 10
+                             , sentence_based = F
+                             , bins = 100
                              ){
 
   require(syuzhet)
@@ -173,7 +175,7 @@ get_narrative_dim_min = function(txt_input_col
     print(paste('TOKEN-BASED SENTIMENT EXTRACTION USING: ', method))
     txt_col = txt_input_col
     empty_matrix = matrix(data = 0
-                          , nrow = 100
+                          , nrow = bins
                           , ncol = length(txt_col)
     )
     sent_lexicon = get_sentiment_dictionary()
@@ -186,17 +188,21 @@ get_narrative_dim_min = function(txt_input_col
         } else if (method == 'meanr'){
           text.scored = score(text.tokens)$score
         } else if (method == 'sentimentr'){
-          text.sentences = sentimentr::get_sentences(text.tokens) #HERE!
+          if(sentence_based == T){
+            text.sentences = sentimentr::get_sentences(txt_col[i])
+          } else if (sentence_based == F){
+            text.sentences = sentimentr::get_sentences(text.tokens)
+          }
           text.scored = sentiment(text.sentences)$sentiment
         }
         text.scored_binned = get_dct_transform(text.scored
-                                               , x_reverse_len=100
+                                               , x_reverse_len=bins
                                                , low_pass_size = low_pass_filter_size
                                                , scale_range = transform_values
                                                , scale_vals = F)
         empty_matrix[, i] = text.scored_binned
       } else {
-        empty_matrix[, i] = rep(NA, 100)
+        empty_matrix[, i] = rep(NA, bins)
       }
     }
     final_df = as.data.frame(empty_matrix)
@@ -216,6 +222,7 @@ get_narrative_dim_min = function(txt_input_col
 #- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
 #- 8 MAR 2018: added error catch with NAs for too short input data
 #- 24 MAR 2018: added arg for low pass filter size
+#- 28 APR 2018: added sentence argument if data are sentence segmented (only for sentimenrr!)
 
 #usage example:
 # data = data.frame('text' = character(2)
