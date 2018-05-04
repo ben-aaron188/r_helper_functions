@@ -5,13 +5,6 @@
 require(stringr)
 require(tm)
 
-### these might be required ###
-# library(data.table)
-# dyn.load('/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/jre/lib/server/libjvm.dylib')
-# require(rJava)
-# library(qdap)
-# library(openNLP)
-
 
 txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
   currentwd = getwd()
@@ -57,6 +50,11 @@ txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
   data = data[,-2]
 
   if(include_processed == T){
+    ### these might be required ###
+    # dyn.load('/Library/Java/JavaVirtualMachines/jdk1.8.0_77.jdk/Contents/Home/jre/lib/server/libjvm.dylib')
+    # require(rJava)
+    # library(qdap)
+    # library(openNLP)
     data$text_proc = sapply(data$text, function(x){
       tm_vec_col = Corpus(VectorSource(x))
       tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_contraction))

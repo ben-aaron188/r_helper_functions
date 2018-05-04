@@ -145,61 +145,166 @@
 #   return(final_df)
 # }
 
-#minified example: this is faster than the above and skips tm-based preprocessing
-get_narrative_dim_min = function(txt_input_col
-                             , txt_id_col
-                             , method
-                             , low_pass_filter_size
-                             , transform_values = F
-                             , min_tokens = 10
-                             , sentence_based = F
-                             , bins = 100
-                             ){
-
-  require(syuzhet)
-  if(method == 'meanr'){
-    require(meanr)
-  }
-  if(method == 'sentimentr'){
-    require(sentimentr)
-  }
-
-
+#minified example: sentence based, takes into account amplifiers and negators
+get_narrative_structure_sentences = function(txt_input_col
+                                         , txt_id_col
+                                         , low_pass_filter_size
+                                         , min_length = 10
+                                         , bins = 100
+                                         , replace_abbr = T
+                                         , clean = F
+                                         , transform_values = T
+                                         , normalize_values = F
+){
   currentwd = getwd()
   t1 = Sys.time()
-  if((!(method %in% c('syuzhet', 'meanr', 'sentimentr')))){
-    print('!!! Choose a valid method!!!')
+
+  if(replace_abbr == T | clean == T){
+    require(tm)
+    require(qdap)
+  }
+
+  require(sentimentr)
+  require(syuzhet)
+
+  if (clean == T & replace_abbr == T) {
+    print('---> PREPROCESSING: replacing abbreviations and standard cleaning')
+    # Replacing of abbreviations because they interfere with sentence splitting (recommended)
+    # Cleaning: replace contractions & numbers and make lower case
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+      as.character(as.matrix(tm_vec_col$content))
+    })
+  } else if (clean == T & replace_abbr == F) {
+    print('---> PREPROCESSING: standard cleaning')
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+
+      as.character(as.matrix(tm_vec_col$content))
+    })
+  } else if (clean == F & replace_abbr == T) {
+    print('---> PREPROCESSING: replacing abbreviations')
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+      as.character(as.matrix(tm_vec_col$content))
+    })
+  } else if (clean == F & replace_abbr == F) {
+    print('---> PREPROCESSING: none')
+    txt_col = txt_input_col
+  }
+
+  # Sentence-based sentiment extraction
+  empty_matrix = matrix(data = 0
+                        , nrow = bins
+                        , ncol = length(txt_col)
+  )
+
+  for(i in 1:length(txt_col)) {
+    print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
+    print('SENTENCE-BASED SENTIMENT EXTRACTION USING SENTIMENTR')
+    sentiment_base = sentimentr::get_sentences(txt_col[i])
+    if(length(unlist(sentiment_base)) >= min_length){
+      text.scored = sentimentr::sentiment(sentiment_base)$sentiment
+      text.scored_binned = get_dct_transform(text.scored
+                                             , x_reverse_len=bins
+                                             , low_pass_size = low_pass_filter_size
+                                             , scale_range = transform_values
+                                             , scale_vals = normalize_values)
+      empty_matrix[, i] = text.scored_binned
+    } else {
+      empty_matrix[, i] = rep(NA, bins)
+    }
+  }
+    final_df = as.data.frame(empty_matrix)
+    colnames(final_df) = txt_id_col
     t2 = Sys.time()
     print(t2-t1)
-  } else {
-    print(paste('TOKEN-BASED SENTIMENT EXTRACTION USING: ', method))
+    setwd(currentwd)
+    return(final_df)
+}
+
+#token-based equivalent: does not account for valence shifters
+get_narrative_structure_tokens = function(txt_input_col
+                             , txt_id_col
+                             , low_pass_filter_size
+                             , min_length = 10
+                             , bins = 100
+                             , replace_abbr = T
+                             , clean = F
+                             , transform_values = T
+                             , normalize_values = F
+                             ){
+  currentwd = getwd()
+  t1 = Sys.time()
+
+  if(replace_abbr == T | clean == T){
+    require(tm)
+    require(qdap)
+  }
+
+  require(sentimentr)
+  require(syuzhet)
+
+
+  if (clean == T & replace_abbr == T) {
+    print('---> PREPROCESSING: replacing abbreviations and standard cleaning')
+    # Replacing of abbreviations because they interfere with sentence splitting (recommended)
+    # Cleaning: replace contractions & numbers and make lower case
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+      as.character(as.matrix(tm_vec_col$content))
+    })
+  } else if (clean == T & replace_abbr == F) {
+    print('---> PREPROCESSING: standard cleaning')
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+
+      as.character(as.matrix(tm_vec_col$content))
+    })
+  } else if (clean == F & replace_abbr == T) {
+    print('---> PREPROCESSING: replacing abbreviations')
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_abbreviation))
+      as.character(as.matrix(tm_vec_col$content))
+    })
+  } else if (clean == F & replace_abbr == F) {
+    print('---> PREPROCESSING: none')
     txt_col = txt_input_col
+  }
+
+  # Sentence-based sentiment extraction
     empty_matrix = matrix(data = 0
                           , nrow = bins
                           , ncol = length(txt_col)
     )
-    sent_lexicon = get_sentiment_dictionary()
-    for(i in 1:length(txt_col)){
+    for(i in 1:length(txt_col)) {
       print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
-      text.tokens = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
-      if(length(text.tokens) >= min_tokens){
-        if(method == 'syuzhet'){
-          text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
-        } else if (method == 'meanr'){
-          text.scored = score(text.tokens)$score
-        } else if (method == 'sentimentr'){
-          if(sentence_based == T){
-            text.sentences = sentimentr::get_sentences(txt_col[i])
-          } else if (sentence_based == F){
-            text.sentences = sentimentr::get_sentences(text.tokens)
-          }
-          text.scored = sentiment(text.sentences)$sentiment
-        }
-        text.scored_binned = get_dct_transform(text.scored
+      print('TOKEN-BASED SENTIMENT EXTRACTION USING SENTIMENTR ')
+      sentiment_base = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
+      sentiment_base = sentimentr::get_sentences(sentiment_base)
+      if(length(sentiment_base) >= min_length){
+          text.scored = sentimentr::sentiment(sentiment_base)$sentiment
+          text.scored_binned = get_dct_transform(text.scored
                                                , x_reverse_len=bins
                                                , low_pass_size = low_pass_filter_size
                                                , scale_range = transform_values
-                                               , scale_vals = F)
+                                               , scale_vals = normalize_values)
         empty_matrix[, i] = text.scored_binned
       } else {
         empty_matrix[, i] = rep(NA, bins)
@@ -211,51 +316,54 @@ get_narrative_dim_min = function(txt_input_col
     print(t2-t1)
     setwd(currentwd)
     return(final_df)
-  }
 }
-
-
-#TODO:
-# - implement sentence based annotation as in sentimentr (line 188)
 
 #CHANGELOG:
 #- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
 #- 8 MAR 2018: added error catch with NAs for too short input data
 #- 24 MAR 2018: added arg for low pass filter size
 #- 28 APR 2018: added sentence argument if data are sentence segmented (only for sentimenrr!)
+#- 2 MAY 2018: made sentiment extr. sentence-based,
+#              adjusted scaling terminology,
+#              added text cleaning (some optional)
+#- 4 MAY 2018: split of token- and sentence-based version
+#              integrated pull request
 
-#usage example:
-# data = data.frame('text' = character(2)
-#                   , 'text_id' = character(2))
-# data$text = c('this is a super, great positive sentence and I just love doing this. Now this will be very negative and with disgusting words and ugly phrases'
-#                  , 'here we begin in a bad, bad, and ugly way but quickly become overly positive for all the great things this exciting code can do')
-# data$text_id = c('text1', 'text2')
-#
-# my_sentiment_analysis = get_narrative_dim(txt_input_col = data$text
-#                         , txt_id_col = data$text_id
-#                         , dimension = 'sentiment'
-#                         , stemming = F
-#                         , transposing = F)
-#
-#
-# my_fast_sentiment_analysis = get_narrative_dim_min(txt_input_col = txt_input_col = data$text
-#                       , txt_id_col = data$text_id
-#                       , method = 'sentimentr'
-#                       , low_pass_filter_size = 5
-#                       , transform_values = T
-#                       )
-#
-# plot(1:100
-#      , my_sentiment_analysis$text2
-#      , type ="h"
-#      , col = "red")
+data = data.frame('text' = character(2)
+                  , 'text_id' = character(2))
+data$text = c("This is a super, great positive sentence. I just love doing this. Now this will be very negative sentence. With disgusting words and ugly phrases. We stay negative for a while. We go even more terrible and awful. Things are getting better now. It's starting to feel really good. I'm ecstatic at this point. This is amazing. I am incredibly positive now."
+              , "I haven't been sad in a long time. I am extremely happy today. It's a good day. But suddenly I'm only a little bit happy. What a great festival this is. I have never ever been so happy. I cannot say how much I do not love this.")
+data$text_id = 1:2
+
+get_narrative_structure_tokens(txt_input_col = data$text
+                      , txt_id_col = data$text_id
+                      , low_pass_filter_size = 5
+                      , clean = T
+                      , replace_abbr = T
+                      , min_length = 10
+                      , bins = 100
+                      , transform_values = T
+                      , normalize_values = F
+                      )
+
+get_narrative_structure_sentences(txt_input_col = data$text
+                               , txt_id_col = data$text_id
+                               , low_pass_filter_size = 5
+                               , clean = T
+                               , replace_abbr = T
+                               , min_length = 2
+                               , bins = 100
+                               , transform_values = T
+                               , normalize_values = F
+                               )
+
 #
 # my_concreteness_analysis = get_narrative_dim(txt_input_col = data$text
 #                                   , txt_id_col = data$text_id
 #                                   , dimension = 'concreteness'
 #                                   , stemming = F
 #                                   , transposing = F)
-#
+
 # plot(1:100
 #      , my_concreteness_analysis$text1
 #      , type ="h"
