@@ -145,60 +145,60 @@
 #   return(final_df)
 # }
 
-#minified example: this is faster than the above and skips tm-based preprocessing
+#minified example: sentence based, takes into account amplifiers and negators
 get_narrative_dim_min = function(txt_input_col
                              , txt_id_col
-                             , method
                              , low_pass_filter_size
-                             , transform_values = F
-                             , min_tokens = 10
+                             , replace_abbr = T
+                             , clean = F
+                             , transform_values = T
+                             , normalize_values = F
                              ){
-
-  require(syuzhet)
-  if(method == 'meanr'){
-    require(meanr)
-  }
-  if(method == 'sentimentr'){
-    require(sentimentr)
-  }
-
-
   currentwd = getwd()
   t1 = Sys.time()
-  if((!(method %in% c('syuzhet', 'meanr', 'sentimentr')))){
-    print('!!! Choose a valid method!!!')
-    t2 = Sys.time()
-    print(t2-t1)
-  } else {
-    print(paste('TOKEN-BASED SENTIMENT EXTRACTION USING: ', method))
+  require(tm)
+  require(qdap)
+  require(sentimentr)
+  require(syuzhet)
+ 
+   # Replacing of abbreviations because they interfere with sentence splitting (recommended)
+  if(replace_abbr == T) {
+    for(i in 1:length(txt_input_col)) {
+      print(paste('---> replacing abbreviations on text: ', txt_id_col[i], sep=""))
+      txt_input_col[i] = replace_abbreviation(txt_input_col[i])
+    }
+  }
+  
+  # Cleaning: replace contractions & numbers and make lower case
+  if (clean == T) {
+    txt_col = sapply(txt_input_col, function(x){
+      tm_vec_col = Corpus(VectorSource(x))
+      tm_vec_col = tm::tm_map(tm_vec_col, content_transformer(replace_contraction))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(replace_number))
+      tm_vec_col = tm_map(tm_vec_col, content_transformer(tolower))
+      as.character(as.matrix(tm_vec_col$content))
+    })
+    txt_col = txt_input_col
+  }
+  
+  # Sentence-based sentiment extraction 
+    print('SENTENCE-BASED SENTIMENT EXTRACTION USING SENTIMENTR ')
     txt_col = txt_input_col
     empty_matrix = matrix(data = 0
                           , nrow = 100
                           , ncol = length(txt_col)
     )
-    sent_lexicon = get_sentiment_dictionary()
-    for(i in 1:length(txt_col)){
+    for(i in 1:length(txt_col)) {
       print(paste('---> performing sentiment extraction on text: ', txt_id_col[i], sep=""))
-      text.tokens = syuzhet::get_tokens(txt_col[i], pattern = "\\W")
-      if(length(text.tokens) >= min_tokens){
-        if(method == 'syuzhet'){
-          text.scored = get_sentiment(text.tokens, method = 'custom', lexicon = sent_lexicon)
-        } else if (method == 'meanr'){
-          text.scored = score(text.tokens)$score
-        } else if (method == 'sentimentr'){
-          text.sentences = sentimentr::get_sentences(text.tokens) #HERE!
+      text.sentences = sentimentr::get_sentences(txt_col[i])
           text.scored = sentiment(text.sentences)$sentiment
-        }
-        text.scored_binned = get_dct_transform(text.scored
+          text.scored_binned = get_dct_transform(text.scored
                                                , x_reverse_len=100
                                                , low_pass_size = low_pass_filter_size
                                                , scale_range = transform_values
-                                               , scale_vals = F)
+                                               , scale_vals = normalize_values)
         empty_matrix[, i] = text.scored_binned
-      } else {
-        empty_matrix[, i] = rep(NA, 100)
       }
-    }
     final_df = as.data.frame(empty_matrix)
     colnames(final_df) = txt_id_col
     t2 = Sys.time()
@@ -206,42 +206,35 @@ get_narrative_dim_min = function(txt_input_col
     setwd(currentwd)
     return(final_df)
   }
-}
-
-
-#TODO:
-# - implement sentence based annotation as in sentimentr (line 188)
 
 #CHANGELOG:
+#- 2 MAY 2018: made sentiment extr. sentence-based,
+#              adjusted scaling terminology,
+#              added text cleaning (some optional)
 #- 7 MAR 2018: added faster alternatives with 'meanr' and 'sentimentr'
 #- 8 MAR 2018: added error catch with NAs for too short input data
 #- 24 MAR 2018: added arg for low pass filter size
 
-#usage example:
 # data = data.frame('text' = character(2)
 #                   , 'text_id' = character(2))
-# data$text = c('this is a super, great positive sentence and I just love doing this. Now this will be very negative and with disgusting words and ugly phrases'
-#                  , 'here we begin in a bad, bad, and ugly way but quickly become overly positive for all the great things this exciting code can do')
-# data$text_id = c('text1', 'text2')
+# data$text = 'This is a super, great positive sentence. I just love doing this. Now this will be very negative sentence. With disgusting words and ugly phrases. 
+#                We stay negative for a while. We go even more terrible and awful. Things are getting better now.
+#                It's starting to feel really good. I'm ecstatic at this point. This is amazing. I am incredibly positive now.' 
+# data$text_id = 'text1'
 #
-# my_sentiment_analysis = get_narrative_dim(txt_input_col = data$text
-#                         , txt_id_col = data$text_id
-#                         , dimension = 'sentiment'
-#                         , stemming = F
-#                         , transposing = F)
-#
-#
-# my_fast_sentiment_analysis = get_narrative_dim_min(txt_input_col = txt_input_col = data$text
+# my_sentiment_analysis = get_narrative_dim_min_snt(txt_input_col = txt_input_col = data$text
 #                       , txt_id_col = data$text_id
-#                       , method = 'sentimentr'
 #                       , low_pass_filter_size = 5
+#                       , clean = F
 #                       , transform_values = T
+#                       , normalize_values = F
 #                       )
 #
 # plot(1:100
-#      , my_sentiment_analysis$text2
+#      , my_sentiment_analysis$text1
 #      , type ="h"
 #      , col = "red")
+#
 #
 # my_concreteness_analysis = get_narrative_dim(txt_input_col = data$text
 #                                   , txt_id_col = data$text_id
