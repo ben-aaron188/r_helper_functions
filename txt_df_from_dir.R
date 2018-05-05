@@ -1,12 +1,14 @@
 ###############################################################################
 ### Creates a dataframe with raw texts from directory
-### Usable in spacy_ner_r pipeline
 ###############################################################################
 require(stringr)
 require(tm)
 
 
-txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
+txt_df_from_dir = function(dirpath
+                           , recursive
+                           , to_lower = FALSE
+                           , include_processed = FALSE){
   currentwd = getwd()
   setwd(dirpath)
   if(recursive == T){
@@ -45,6 +47,9 @@ txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
 
   data$text = sub('.*\\@@@(.*)','\\1', data$text)
   data$text = str_replace_all(data$text, "[\n]", " ")
+  if(to_lower == T){
+    data$text = tolower(data$text)
+  }
   data$nwords = unlist(lapply(str_split(data$text, ' '), length))
 
   data = data[,-2]
@@ -81,6 +86,8 @@ txt_df_from_dir = function(dirpath, recursive, include_processed = FALSE){
 #6 DEC 2017: ADDED processing pipeline for additional text column
 #3 MAR 2018: ADDED  recursiveness
 #27 APR 2018: ADDED WORD (TOKEN) COUNT + ADDED LINE BREAK FIX
+#5 MAY 2018: ADDED LOWER PARAMETER
+
 #END CHANGELOG
 
 #TODO:
