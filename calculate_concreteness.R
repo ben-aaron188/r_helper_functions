@@ -12,6 +12,7 @@
 source('./txt_df_from_dir.R')
 source('./toNumeric.R')
 require(data.table)
+require(tokenizers)
 #read concreteness data Brysbaert
 #DO NOT RUN
 # files = list.files(pattern = '*.txt')
@@ -41,7 +42,7 @@ get_concreteness = function(input_txt_col, stemming_global, type){
 
   f1 = sapply(input_txt_col, function(x){
 
-    word_vec_for_df = unlist(tokenize_words(x))
+    word_vec_for_df = unlist(tokenizers::tokenize_words(x))
     word_vec_for_df_length = length(word_vec_for_df)
     df = data.frame('id' = 1:word_vec_for_df_length
                     , 'word' = word_vec_for_df)
@@ -72,12 +73,5 @@ get_concreteness = function(input_txt_col, stemming_global, type){
 }
 
 #usage example:
-# ngram_plus_1 = get_term_doc_matrix_plus(input_txt_col = data$text
-#                                         , tdm_type = 'tfidf'
-#                                         , sparsity = .95
-#                                         , tfidf_stemming = F
-#                                         , add_weights = T)
-#
-# data_merged = merge(data, ngram_plus_1, by='id')
 # data$conc = get_concreteness(data$text[1:20], F, 'mean')
 

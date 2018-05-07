@@ -329,33 +329,33 @@ get_narrative_structure_tokens = function(txt_input_col
 #- 4 MAY 2018: split of token- and sentence-based version
 #              integrated pull request
 
-data = data.frame('text' = character(2)
-                  , 'text_id' = character(2))
-data$text = c("This is a super, great positive sentence. I just love doing this. Now this will be very negative sentence. With disgusting words and ugly phrases. We stay negative for a while. We go even more terrible and awful. Things are getting better now. It's starting to feel really good. I'm ecstatic at this point. This is amazing. I am incredibly positive now."
-              , "I haven't been sad in a long time. I am extremely happy today. It's a good day. But suddenly I'm only a little bit happy. What a great festival this is. I have never ever been so happy. I cannot say how much I do not love this.")
-data$text_id = 1:2
-
-get_narrative_structure_tokens(txt_input_col = data$text
-                      , txt_id_col = data$text_id
-                      , low_pass_filter_size = 5
-                      , clean = T
-                      , replace_abbr = T
-                      , min_length = 10
-                      , bins = 100
-                      , transform_values = T
-                      , normalize_values = F
-                      )
-
-get_narrative_structure_sentences(txt_input_col = data$text
-                               , txt_id_col = data$text_id
-                               , low_pass_filter_size = 5
-                               , clean = T
-                               , replace_abbr = T
-                               , min_length = 2
-                               , bins = 100
-                               , transform_values = T
-                               , normalize_values = F
-                               )
+# data = data.frame('text' = character(2)
+#                   , 'text_id' = character(2))
+# data$text = c("This is a super, great positive sentence. I just love doing this. Now this will be very negative sentence. With disgusting words and ugly phrases. We stay negative for a while. We go even more terrible and awful. Things are getting better now. It's starting to feel really good. I'm ecstatic at this point. This is amazing. I am incredibly positive now."
+#               , "I haven't been sad in a long time. I am extremely happy today. It's a good day. But suddenly I'm only a little bit happy. What a great festival this is. I have never ever been so happy. I cannot say how much I do not love this.")
+# data$text_id = 1:2
+#
+# get_narrative_structure_tokens(txt_input_col = data$text
+#                       , txt_id_col = data$text_id
+#                       , low_pass_filter_size = 5
+#                       , clean = T
+#                       , replace_abbr = T
+#                       , min_length = 10
+#                       , bins = 100
+#                       , transform_values = T
+#                       , normalize_values = F
+#                       )
+#
+# get_narrative_structure_sentences(txt_input_col = data$text
+#                                , txt_id_col = data$text_id
+#                                , low_pass_filter_size = 5
+#                                , clean = T
+#                                , replace_abbr = T
+#                                , min_length = 2
+#                                , bins = 100
+#                                , transform_values = T
+#                                , normalize_values = F
+#                                )
 
 #
 # my_concreteness_analysis = get_narrative_dim(txt_input_col = data$text
