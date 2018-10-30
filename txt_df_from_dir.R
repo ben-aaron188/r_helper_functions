@@ -47,6 +47,11 @@ txt_df_from_dir = function(dirpath
 
   data$text = sub('.*\\@@@(.*)','\\1', data$text)
   data$text = str_replace_all(data$text, "[\n]", " ")
+  data$text = str_replace_all(data$text, ">", " ")
+  data$text = str_replace_all(data$text, "--", " ")
+  data$text = str_squish(data$text)
+
+
   if(to_lower == T){
     data$text = tolower(data$text)
   }
@@ -87,6 +92,7 @@ txt_df_from_dir = function(dirpath
 #3 MAR 2018: ADDED  recursiveness
 #27 APR 2018: ADDED WORD (TOKEN) COUNT + ADDED LINE BREAK FIX
 #5 MAY 2018: ADDED LOWER PARAMETER
+#30 OCT 2018: ADDED STR SQUISH AND OTHER CLEANING FOR SPEC. CHARS.
 
 #END CHANGELOG
 
@@ -95,7 +101,7 @@ txt_df_from_dir = function(dirpath
 
 
 #usage example:
-#new_data = txt_df_from_dir(dirpath = './my_text_folder', recursive = T, include_processed = T)
+#new_data = txt_df_from_dir(dirpath = './my_text_folder', recursive = T, include_processed = T, to_lower = F)
 
 #View(new_data)
 
