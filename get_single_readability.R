@@ -3,7 +3,9 @@
 ### Built on the 'readability' package
 ###############################################################################
 
-
+if (!require(readability)){
+  install.packages('readability')
+} 
 require(readability)
 
 get_single_readability = function(input_col, index_kind, multi = T){
@@ -27,4 +29,4 @@ get_single_readability = function(input_col, index_kind, multi = T){
 # - 'Average_Grade_Level'
 
 #load as:
-# source('')
+# source('get_single_readability.R')
