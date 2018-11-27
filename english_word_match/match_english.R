@@ -27,6 +27,7 @@ setwd(currentwd)
 
 match_english = function(input_col, output_kind = 'match', output_type = 'prop'){
     sapply(seq(input_col), function(i){
+      print(paste(i, '/', length(input_col), sep=""))
       mod_string = paste(input_col[i], collapse = ' ')
       mod_string = str_replace_all(mod_string, "[.,;:!?]", "")
       mod_string = tolower(mod_string)
@@ -82,4 +83,5 @@ match_english = function(input_col, output_kind = 'match', output_type = 'prop')
 
 #TODO
 #- different languages
+#- progress indicator
 #- speed optimization
