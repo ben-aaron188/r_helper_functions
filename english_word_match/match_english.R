@@ -63,8 +63,49 @@ match_english = function(input_col, output_kind = 'match', output_type = 'prop')
     })
 }
 
+#for loop alternative
+#processing speed is fastest for the sapply method
+match_english_loop = function(input_col, output_kind = 'match', output_type = 'prop'){
+  for(i in 1:length(input_col)){
+    print(paste(i, '/', length(input_col), sep=""))
+    mod_string = paste(input_col[i], collapse = ' ')
+    mod_string = str_replace_all(mod_string, "[.,;:!?]", "")
+    mod_string = tolower(mod_string)
+    mod_string = unlist(str_split(mod_string, " "))
+    mod_string = mod_string[nchar(mod_string) > 0]
+    
+    #transform to data table
+    text.raw = data.table(text = mod_string
+                          , index = 1:length(mod_string))
+    
+    text.english_match = merge(text.raw
+                               , english_words
+                               , by.x = 'text'
+                               , by.y = 'words'
+                               , all.x = TRUE)
+    text.english_match = text.english_match[order(index),]
+    text.english_match$ascii = stri_enc_isascii(mod_string)
+    text.english_match$control_vec[is.na(text.english_match$control_vec)] = 0
+    
+    if(output_kind == 'match'){
+      if(output_type == 'prop'){
+        unname(prop.table(table(text.english_match$control_vec == 0))[1])
+      } else if(output_type == 'count'){
+        unname(table(text.english_match$control_vec == 0)[1])
+      }
+    } else if(output_kind == 'ascii'){
+      if(output_type == 'prop'){
+        unname(prop.table(table(text.english_match$ascii == 0))[1])
+      } else if(output_type == 'count'){
+        unname(table(text.english_match$ascii == 0)[1])
+      }
+    }
+  }
+}
+
 #CHANGELOG
 #27 Nov: init
+#28 Nov: included tracker+ added for loop impl.
 
 
 #usage example:
@@ -83,5 +124,4 @@ match_english = function(input_col, output_kind = 'match', output_type = 'prop')
 
 #TODO
 #- different languages
-#- progress indicator
 #- speed optimization
