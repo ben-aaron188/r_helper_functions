@@ -59,6 +59,8 @@ match_english = function(input_col, which_dict, output_kind = 'match', output_ty
       text.english_match = text.english_match[order(index),]
       text.english_match$ascii = stri_enc_isascii(mod_string)
       text.english_match$control_vec[is.na(text.english_match$control_vec)] = 0
+      unmatched_words = text.english_match$text[text.english_match$control_vec == 0]
+      unmatched_words = paste(unmatched_words, collapse = ' ')
       
       if(output_kind == 'match'){
         if(output_type == 'prop'){
@@ -72,6 +74,8 @@ match_english = function(input_col, which_dict, output_kind = 'match', output_ty
         } else if(output_type == 'count'){
           unname(table(text.english_match$ascii == 0)[1])
         }
+      } else if(output_kind == 'unmatched_words'){
+        unmatched_words
       }
     })
 }
@@ -99,6 +103,8 @@ match_english_loop = function(input_col, output_kind = 'match', output_type = 'p
     text.english_match = text.english_match[order(index),]
     text.english_match$ascii = stri_enc_isascii(mod_string)
     text.english_match$control_vec[is.na(text.english_match$control_vec)] = 0
+    unmatched_words = text.english_match$text[text.english_match$control_vec == 0]
+    unmatched_words = paste(unmatched_words, collapse = ' ')
     
     if(output_kind == 'match'){
       if(output_type == 'prop'){
@@ -112,6 +118,8 @@ match_english_loop = function(input_col, output_kind = 'match', output_type = 'p
       } else if(output_type == 'count'){
         unname(table(text.english_match$ascii == 0)[1])
       }
+    } else if(output_kind == 'unmatched_words'){
+      unmatched_words
     }
   }
 }
@@ -119,11 +127,13 @@ match_english_loop = function(input_col, output_kind = 'match', output_type = 'p
 #CHANGELOG
 #27 Nov: init
 #28 Nov: included tracker+ added for loop impl.
+#10 Feb: added unmatched word option
 #19 Feb: added 10k word list and which_dict param
 
 
 #usage example:
 # match_english(dt.data$text[1:2], which_dict == '10k') #default params
+# match_english(dt.data$text[1:2], which_dict == '10k', outpuy_kind ="unmatched_words") #unmatched words
 # match_english(input_col = dt.data$text[1:2]) #default params
 # 
 # match_english(input_col = dt.data$text[1:2]

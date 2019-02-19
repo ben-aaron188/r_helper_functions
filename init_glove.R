@@ -94,6 +94,6 @@ init_glove = function(dir, dimensions){
 # head(sort(cos_sim_vals[,1], decreasing = TRUE), 5)
 
 #load as:
-# ource('init_glove.R')
+#ource('init_glove.R')
 
 ### END
