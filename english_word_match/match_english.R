@@ -1,8 +1,11 @@
 ###############################################################################
-### Matches a character string against a list of XX English words
-### Wordlist taken from: https://github.com/dwyl/english-words
+### Matches a character string against a list of 300k or 10k English words
+### Wordlists taken from: 
+#### - https://github.com/dwyl/english-words
+#### - https://github.com/first20hours/google-10000-english/blob/master/google-10000-english.txt
 ### inspiration from: https://stackoverflow.com/a/43049698 and https://stackoverflow.com/a/8082262
 ### Vectorized for DF use
+### author: B Kleinberg https://github.com/ben-aaron188
 ###############################################################################
 
 if (!require(stringi)){
@@ -20,13 +23,23 @@ require(data.table)
 ##reset WD
 currentwd = getwd()
 setwd('/Users/bennettkleinberg/GitHub/r_helper_functions/english_word_match')
-english_words = fread('words_alpha.txt', header=F)
-names(english_words) = 'words'
-english_words$control_vec = 1
+english_words_300k = fread('words_alpha.txt', header=F)
+english_words_10k = fread('google_10k_list.txt', header=F)
+names(english_words_300k) = 'words'
+names(english_words_10k) = 'words'
+english_words_300k$control_vec = 1
+english_words_10k$control_vec = 1
 setwd(currentwd)
 
-match_english = function(input_col, output_kind = 'match', output_type = 'prop'){
-    sapply(seq(input_col), function(i){
+match_english = function(input_col, which_dict, output_kind = 'match', output_type = 'prop'){
+  
+  if(which_dict == '10k'){
+    english_words = english_words_10k
+  } else if (which_dict == '300k'){
+    english_words = english_words_300k
+  }
+    
+  sapply(seq(input_col), function(i){
       print(paste(i, '/', length(input_col), sep=""))
       mod_string = paste(input_col[i], collapse = ' ')
       mod_string = str_replace_all(mod_string, "[.,;:!?]", "")
@@ -106,13 +119,15 @@ match_english_loop = function(input_col, output_kind = 'match', output_type = 'p
 #CHANGELOG
 #27 Nov: init
 #28 Nov: included tracker+ added for loop impl.
+#19 Feb: added 10k word list and which_dict param
 
 
 #usage example:
-# match_english(dt.data$text[1:2]) #default params
+# match_english(dt.data$text[1:2], which_dict == '10k') #default params
 # match_english(input_col = dt.data$text[1:2]) #default params
 # 
 # match_english(input_col = dt.data$text[1:2]
+#               , which_dict == '10k'
 #               , output_kind = 'ascii'
 #               , output_type = 'prop') #custom settings
 
