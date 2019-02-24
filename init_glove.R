@@ -41,37 +41,73 @@ setup_pipe = function(dir){
   
 }
 
-
-init_glove = function(dir, dimensions){
+init_glove = function(dir, which_model, dimensions){
   
   if(setup_pipe(dir) == T){
   
-    if(dimensions == 50){
-      pt_glove = fread('./glove.6B.50d.txt', quote = "")  
-      print('--- initialising the 50d model ---')
-    } else if(dimensions == 100){
-      pt_glove = fread('./glove.6B.100d.txt', quote = "")  
-      print('--- initialising the 100d model ---')
-    } else if(dimensions == 200){
-      pt_glove = fread('./glove.6B.200d.txt', quote = "")  
-      print('--- initialising the 200d model ---')
-    } else if(dimensions == 300){
-      pt_glove = fread('./glove.6B.300d.txt', quote = "")  
-      print('--- initialising the 300d model ---')
+    if(which_model == '6B'){
+      
+      if(dimensions == 50){
+        pt_glove = fread('./glove.6B.50d.txt', quote = "")  
+        print('--- initialising the 50d model ---')
+      } else if(dimensions == 100){
+        pt_glove = fread('./glove.6B.100d.txt', quote = "")  
+        print('--- initialising the 100d model ---')
+      } else if(dimensions == 200){
+        pt_glove = fread('./glove.6B.200d.txt', quote = "")  
+        print('--- initialising the 200d model ---')
+      } else if(dimensions == 300){
+        pt_glove = fread('./glove.6B.300d.txt', quote = "")  
+        print('--- initialising the 300d model ---')
+      }
+  
+    } else if(which_model == '27B'){
+      
+      if(dimensions == 25){
+        pt_glove = fread('./glove.twitter.27B.25d.txt', quote = "")  
+        print('--- initialising the 27B 25d model ---')
+      } else if(dimensions == 50){
+        pt_glove = fread('./glove.twitter.27B.50d.txt', quote = "")  
+        print('--- initialising the 27B 50d model ---')
+      } else if(dimensions == 100){
+        pt_glove = fread('./glove.twitter.27B.100d.txt', quote = "")  
+        print('--- initialising the 27B 100d model ---')
+      } else if(dimensions == 200){
+        pt_glove = fread('./glove.twitter.27B.200d.txt', quote = "")  
+        print('--- initialising the 27B 200d model ---')
+      }
+      
+    } else if(which_model == '42B'){
+      
+      pt_glove = fread('./glove.42B.300d.txt', quote = "")  
+      print('--- initialising the 42B 300d model ---')
+      
+    } else if(which_model == '840B'){
+      
+      pt_glove = fread('./glove.840B.300d.txt', quote = "")  
+      print('--- initialising the 840B 300d model ---')
+      
+    } else if(!(which_model %in% c('6B', '27B', '42B', '840B'))){
+      
+      print('Choose from: 6B, 27B, 42B, 840B')
+      print('For the 6B and 27B model, specify the dimensions too.')
+      
     }
     
     feat_glove = pt_glove$V1
     pt_glove = pt_glove[, -1]
     names(pt_glove) = paste('vec', 1:dimensions, sep="_")
+    
     pt_glove.matrix = as.matrix(pt_glove)
+    rm(pt_glove)
+    
     rownames(pt_glove.matrix) = feat_glove
+    rm(feat_glove)
     
     pt_glove.dfm = as.dfm(rbind(pt_glove.matrix))
-    glove.pt <<- pt_glove.dfm
-    
-    rm(pt_glove)
-    rm(feat_glove)
     rm(pt_glove.matrix)
+    
+    glove.pt <<- pt_glove.dfm
     rm(pt_glove.dfm)
     
     print('Success: initialised GloVe model as glove.pt')
@@ -82,7 +118,7 @@ init_glove = function(dir, dimensions){
 
 #CHANGELOG
 #19 Feb - init
-
+#24 Feb - added multi-model support
 
 #usage example:
 # init_glove(dir = '/Users/bennettkleinberg/Downloads/glove.6B', dim=100)
