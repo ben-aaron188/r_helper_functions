@@ -7,7 +7,6 @@
 
 ###NOTE: you will need to download the pretrained GloVe vectors from:
 ###https://nlp.stanford.edu/projects/glove/
-###This function uses the glove.6B.zip model.
 
 
 if (!require(data.table)){
@@ -94,6 +93,7 @@ init_glove = function(dir, which_model, dimensions){
       
     }
     
+    pt_glove = pt_glove[!(is.na(V1)), ]
     feat_glove = pt_glove$V1
     pt_glove = pt_glove[, -1]
     names(pt_glove) = paste('vec', 1:dimensions, sep="_")
@@ -119,9 +119,10 @@ init_glove = function(dir, which_model, dimensions){
 #CHANGELOG
 #19 Feb - init
 #24 Feb - added multi-model support
+#28 Feb - fixed feat names bug
 
 #usage example:
-# init_glove(dir = '/Users/bennettkleinberg/Downloads/glove.6B', dim=100)
+# init_glove(dir = '/Users/bennettkleinberg/Downloads/glove.6B', which_model = '6B', dim=100)
 # 
 # cos_sim_vals = textstat_simil(glove.pt
 #                               , selection = c("man")
@@ -130,6 +131,6 @@ init_glove = function(dir, which_model, dimensions){
 # head(sort(cos_sim_vals[,1], decreasing = TRUE), 5)
 
 #load as:
-#ource('init_glove.R')
+#source('init_glove.R')
 
 ### END
