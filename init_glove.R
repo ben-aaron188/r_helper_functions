@@ -120,9 +120,10 @@ init_glove = function(dir, which_model, dimensions){
 #19 Feb - init
 #24 Feb - added multi-model support
 #28 Feb - fixed feat names bug
+#29 Aug - changed path
 
 #usage example:
-# init_glove(dir = '/Users/bennettkleinberg/Downloads/glove.6B', which_model = '6B', dim=100)
+# init_glove(dir = '.../glove', which_model = '6B', dim=100)
 # 
 # cos_sim_vals = textstat_simil(glove.pt
 #                               , selection = c("man")
