@@ -9,8 +9,8 @@
 #easiest is to use the repo on: https://github.com/ben-aaron188/r_helper_functions
 
 #deps
-source('./txt_df_from_dir.R')
-source('./toNumeric.R')
+source('/Users/bennettkleinberg/GitHub/r_helper_functions/txt_df_from_dir.R')
+source('/Users/bennettkleinberg/GitHub/r_helper_functions/toNumeric.R')
 require(data.table)
 require(tokenizers)
 #read concreteness data Brysbaert
@@ -31,8 +31,7 @@ require(tokenizers)
 # save(concr
 #      , file = 'brysbaert_concr.RData')
 #END DO NOT RUN
-
-load('./concreteness/brysbaert_concr.RData')
+load('/Users/bennettkleinberg/GitHub/r_helper_functions/concreteness/brysbaert_concr.RData')
 
 get_concreteness = function(input_txt_col, stemming_global, type){
 
@@ -44,18 +43,30 @@ get_concreteness = function(input_txt_col, stemming_global, type){
 
     word_vec_for_df = unlist(tokenizers::tokenize_words(x))
     word_vec_for_df_length = length(word_vec_for_df)
-    df = data.frame('id' = 1:word_vec_for_df_length
-                    , 'word' = word_vec_for_df)
-    if(stemming_global == T){
-      concr_df = merge(df, concr
-                       , by='word')
-    } else if(stemming_global == F){
-      concr_df = merge(df, concr
-                       , by.x='word'
-                       , by.y='word_stemmed')
+    
+    if(word_vec_for_df_length != 0){
+      
+      df = data.frame('id' = 1:word_vec_for_df_length
+                      , 'word' = word_vec_for_df)
+      if(stemming_global == T){
+        concr_df = merge(df, concr
+                         , by='word')
+      } else if(stemming_global == F){
+        concr_df = merge(df, concr
+                         , by.x='word'
+                         , by.y='word_stemmed')
+      }
+    
+      concr_sum = sum(concr_df$conc.m)
+      concr_avg = mean(concr_df$conc.m)
+        
+    } else {
+      
+      concr_sum = 0
+      concr_avg = 0
+      
     }
-    concr_sum = sum(concr_df$conc.m)
-    concr_avg = mean(concr_df$conc.m)
+    
     if(type == 'sum'){
       return(concr_sum)
     } else if(type == 'mean'){

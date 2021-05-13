@@ -7,7 +7,8 @@ require(stringr)
 txt_df_from_dir = function(dirpath
                            , recursive
                            , to_lower = FALSE
-                           , include_processed = FALSE){
+                           , include_processed = FALSE
+                           , replace_line_breaks = FALSE){
   currentwd = getwd()
   setwd(dirpath)
   if(recursive == T){
@@ -45,8 +46,12 @@ txt_df_from_dir = function(dirpath
   }
 
   data$text = sub('.*\\@@@(.*)','\\1', data$text)
-  data$text = str_replace_all(data$text, "[\n]", " ")
   data$text = str_replace_all(data$text, ">", " ")
+  if(replace_line_breaks == T){
+    data$text = str_replace_all(data$text, "[\n]", "<br><br>")  
+  } else {
+    data$text = str_replace_all(data$text, "[\n]", " ")  
+  }
   data$text = str_replace_all(data$text, "--", " ")
   data$text = str_squish(data$text)
 
@@ -93,6 +98,7 @@ txt_df_from_dir = function(dirpath
 #27 APR 2018: ADDED WORD (TOKEN) COUNT + ADDED LINE BREAK FIX
 #5 MAY 2018: ADDED LOWER PARAMETER
 #30 OCT 2018: ADDED STR SQUISH AND OTHER CLEANING FOR SPEC. CHARS.
+#26 JUNE 2020: ADDED ARGUMENT FOR LINE BREAKS
 
 #END CHANGELOG
 

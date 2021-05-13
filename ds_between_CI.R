@@ -1,11 +1,11 @@
 ###############################################################################
 ### Calculates Cohen's d effect size for between subjects comparisons #########
-### returns full APA style report for t-test incl. 95% confidence interval ####
+### returns full APA style report for t-test incl. confidence interval ####
 ###############################################################################
 require(MBESS)
 
 ds_between_ci <-
-function(outcome, categ, report, varequal){
+function(outcome, categ, report=T, varequal=F, CI_level = .99){
 
     a = tapply(outcome, categ, mean)
     a = a[!is.na(a)]
@@ -27,27 +27,31 @@ function(outcome, categ, report, varequal){
     i = ((n1-1)*b[1]^2 + (n2-1)*b[2]^2)/(n1+n2-2)
     k = sqrt(i)
     j = as.vector(h/k)
-    l = ci.smd(ncp = f, n.1 = n1, n.2 = n2, conf.level = .95)
+    l = ci.smd(ncp = f, n.1 = n1, n.2 = n2, conf.level = CI_level)
+    ci_level_for_report = as.character(CI_level*100)
   if(report == T){
-    out = paste("t(", df, ")", " = ", f, ", p = ", pvalue, ", dbetween = ", round(d, 2), " [95% CI: ", round(l$Lower.Conf.Limit.smd, 2), " - ", round(l$Upper.Conf.Limit.smd, 2), "].", sep="")
+    out = paste("t(", df, ")", " = ", f, ", p = ", pvalue, ", dbetween = ", round(d, 2), " [", ci_level_for_report, "% CI: ", round(l$Lower.Conf.Limit.smd, 2), " - ", round(l$Upper.Conf.Limit.smd, 2), "].", sep="")
   } else {
     out = list("Cohen's d between: Mdiff / SD" = round(c, 4),
                "Cohen's ds between: t-test based (Lakens, 2013)" = round(d, 4),
                "Cohen's ds between SD based (Lakens, 2013)" = round(j, 4),
-               "95% CI lower boundary" = round(l$Lower.Conf.Limit.smd, 4),
-               "95% CI upper boundary" = round(l$Upper.Conf.Limit.smd, 4))
+               "CI lower boundary" = round(l$Lower.Conf.Limit.smd, 4),
+               "CI upper boundary" = round(l$Upper.Conf.Limit.smd, 4))
   }
     print(out)
 }
 
 #CHANGE LOG:
 #30 DEC 2017: fixed bug in line 20 which transformed 0 class labels to NAs.
+#29 MAR 2020: changed default CI to .99
+#13 MAY 2021: changed CI to function argument
 
 #usage example:
 # ds_between_ci(data$outcome
 # , data$condition
 # , report = T
-# , varequal = F)
+# , varequal = F
+# , CI_level = .99)
 
 
 #load as:

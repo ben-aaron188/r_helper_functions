@@ -25,10 +25,20 @@ currentwd = getwd()
 setwd('/Users/bennettkleinberg/GitHub/r_helper_functions/english_word_match')
 english_words_300k = fread('words_alpha.txt', header=F)
 english_words_10k = fread('google_10k_list.txt', header=F)
+nrc_emotion_list = setDT(lexicon::nrc_emotions[, 1])
+nrc_sentiment_list = setDT(lexicon::hash_sentiment_nrc[,1])
+jockersrinker_sentiment_list = setDT(lexicon::hash_sentiment_jockers_rinker[,1])
 names(english_words_300k) = 'words'
 names(english_words_10k) = 'words'
+names(nrc_emotion_list) = 'words'
+names(nrc_sentiment_list) = 'words'
+names(jockersrinker_sentiment_list) = 'words'
 english_words_300k$control_vec = 1
 english_words_10k$control_vec = 1
+nrc_emotion_list$control_vec = 1
+nrc_sentiment_list$control_vec = 1
+jockersrinker_sentiment_list$control_vec = 1
+
 setwd(currentwd)
 
 match_english = function(input_col, which_dict, output_kind = 'match', output_type = 'prop'){
@@ -37,12 +47,22 @@ match_english = function(input_col, which_dict, output_kind = 'match', output_ty
     english_words = english_words_10k
   } else if (which_dict == '300k'){
     english_words = english_words_300k
+  } else if (which_dict == 'nrcemotion'){
+    english_words = nrc_emotion_list
+  } else if (which_dict == 'nrcsentiment'){
+    english_words = nrc_sentiment_list
+  } else if (which_dict == 'jockersrinkersentiment'){
+    english_words = jockersrinker_sentiment_list
   }
-    
+  
+  print(paste0('returns matched words for: ', which_dict, ", ", output_type))
+  
+  
   sapply(seq(input_col), function(i){
       print(paste(i, '/', length(input_col), sep=""))
       mod_string = paste(input_col[i], collapse = ' ')
       mod_string = str_replace_all(mod_string, "[.,;:!?]", "")
+      mod_string = str_replace_all(mod_string, "[\r\n\t]", " ")
       mod_string = tolower(mod_string)
       mod_string = unlist(str_split(mod_string, " "))
       mod_string = mod_string[nchar(mod_string) > 0]
@@ -64,13 +84,15 @@ match_english = function(input_col, which_dict, output_kind = 'match', output_ty
       
       if(output_kind == 'match'){
         if(output_type == 'prop'){
-          unname(prop.table(table(text.english_match$control_vec == 0))[1])
+          #unname(prop.table(table(text.english_match$control_vec == 0))[1])
+          mean(text.english_match$control_vec)
         } else if(output_type == 'count'){
           unname(table(text.english_match$control_vec == 0)[1])
         }
       } else if(output_kind == 'ascii'){
         if(output_type == 'prop'){
-          unname(prop.table(table(text.english_match$ascii == 0))[1])
+          #unname(prop.table(table(text.english_match$ascii == 0))[1])
+          mean(text.english_match$ascii)
         } else if(output_type == 'count'){
           unname(table(text.english_match$ascii == 0)[1])
         }
@@ -125,15 +147,16 @@ match_english_loop = function(input_col, output_kind = 'match', output_type = 'p
 }
 
 #CHANGELOG
-#27 Nov: init
-#28 Nov: included tracker+ added for loop impl.
-#10 Feb: added unmatched word option
-#19 Feb: added 10k word list and which_dict param
+#27 Nov 2018: init
+#28 Nov 2018: included tracker+ added for loop impl.
+#10 Feb 2019: added unmatched word option
+#19 Feb 2019: added 10k word list and which_dict param
+#27 Dec 2020: added emotion and sentiment word lists + fix in calculations
 
 
 #usage example:
 # match_english(dt.data$text[1:2], which_dict == '10k') #default params
-# match_english(dt.data$text[1:2], which_dict == '10k', outpuy_kind ="unmatched_words") #unmatched words
+# match_english(dt.data$text[1:2], which_dict == '10k', output_kind ="unmatched_words") #unmatched words
 # match_english(input_col = dt.data$text[1:2]) #default params
 # 
 # match_english(input_col = dt.data$text[1:2]

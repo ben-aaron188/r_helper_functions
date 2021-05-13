@@ -1,6 +1,6 @@
 ###############################################################################
-### Pretrained GloVe
-### Downloaded from: https://nlp.stanford.edu/projects/glove/
+### Using pretrained GloVe models locally in R
+### Models downloadable from: https://nlp.stanford.edu/projects/glove/
 ### author: B Kleinberg https://github.com/ben-aaron188
 ###############################################################################
 
