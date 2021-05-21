@@ -4,7 +4,7 @@
 ###############################################################################
 
 dz_within_ci <-
-function(var1, var2, report, remove_na=T){
+function(var1, var2, report, remove_na=T, CI_level = .99){
     require("MBESS")
     
     a = mean(var1 - var2, na.rm = remove_na)
@@ -19,9 +19,10 @@ function(var1, var2, report, remove_na=T){
     #pvalue = round(e$p.value, 4)
     pvalue = e$p.value
     t = t.test(var1, var2, paired = T)$statistic
-    l = ci.sm(ncp = t, N = length(var1), conf.level = .99)
+    l = ci.sm(ncp = t, N = length(var1), conf.level = CI_level)
+    ci_level_for_report = as.character(CI_level*100)
     if(report == T){
-      out = paste("t(", df, ")", " = ", f, ", p = ", pvalue, ", dwithin = ", round(d, 2), " [99% CI: ", round(l$Lower.Conf.Limit.Standardized.Mean, 2), " - ", round(l$Upper.Conf.Limit.Standardized.Mean, 2), "].", sep="")
+      out = paste("t(", df, ")", " = ", f, ", p = ", pvalue, ", dwithin = ", round(d, 2), " [", ci_level_for_report, "% CI: ", round(l$Lower.Conf.Limit.Standardized.Mean, 2), " - ", round(l$Upper.Conf.Limit.Standardized.Mean, 2), "].", sep="")
     } else {
       out = list("Cohen's d within uncorrected" = round(c, 4),
                  "Cohen's dz within (Lakens, 2013)" = round(d, 4))
